@@ -4,7 +4,12 @@ import { sendWelcomeEmail } from "@/lib/sendWelcomeEmail";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, username, genreIds } = await req.json();
+    const { email, username, genreIds, lastname } = await req.json();
+     
+        if (lastname && lastname.length > 0) {
+        // Optionally log or monitor these events if you want to study bot activity
+        return NextResponse.json({ success: true });
+      }
 
     // 1. Create the user
     const { data: user, error: userError } = await supabase
@@ -18,6 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = user.id;
+    
 
     // 2. Insert user_genres
     if (Array.isArray(genreIds) && genreIds.length > 0) {

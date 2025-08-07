@@ -6,7 +6,12 @@ type Genre = {
   name: string;
 };
 
-export default function NewsletterSignupSection() {
+interface SignupFormProps {
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+export default function SignupForm({ onSuccess, onCancel }: SignupFormProps) {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [genres, setGenres] = useState<Genre[]>([]);
@@ -14,9 +19,8 @@ export default function NewsletterSignupSection() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // Fetch genres from your API
   useEffect(() => {
-    fetch('/api/genres') // You'll want to set up this API route or call Supabase directly here!
+    fetch('/api/genres')
       .then(res => res.json())
       .then(data => setGenres(data.genres))
       .catch(() => setGenres([]));
@@ -24,7 +28,6 @@ export default function NewsletterSignupSection() {
 
   function toggleGenre(genre: Genre) {
     if (genre.name === "All of the Above") {
-      // Select or deselect all genres except "All of the Above"
       if (selectedGenres.length === genres.length - 1) {
         setSelectedGenres([]);
       } else {
@@ -37,10 +40,17 @@ export default function NewsletterSignupSection() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
+    // Honeypot check!
+    const honeypot = (e.target as any).lastname?.value || "";
+    if (honeypot) {
+      setLoading(false);
+      setMessage("Submission blocked. Are you a bot?");
+      return;
+    }
     try {
       const res = await fetch("/api/signup", {
         method: "POST",
@@ -49,14 +59,16 @@ export default function NewsletterSignupSection() {
           email,
           username,
           genreIds: selectedGenres,
+          lastname: honeypot
         }),
       });
       const data = await res.json();
       if (data.success) {
-        setMessage("You're signed up! Check your email soon.");
+        setMessage(null);
         setEmail("");
         setUsername("");
         setSelectedGenres([]);
+        onSuccess();
       } else {
         setMessage(data.error || "Something went wrong.");
       }
@@ -68,9 +80,6 @@ export default function NewsletterSignupSection() {
 
   return (
     <section className="w-full max-w-md mx-auto bg-gray-900/95 rounded-2xl shadow-xl px-6 py-10 mb-16">
-      <h2 className="text-2xl font-bold mb-4 text-pink-400 text-center">
-        Join the So Wizard Newsletter
-      </h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           type="email"
@@ -111,24 +120,31 @@ export default function NewsletterSignupSection() {
               </button>
             ))}
             <div className="flex flex-wrap gap-2 mb-3">
-            <button
+              <button
                 type="button"
                 onClick={() => setSelectedGenres(genres.map(g => g.id))}
                 className={`px-4 py-2 rounded-full font-medium transition bg-pink-700 text-white shadow-md`}
-            >
+              >
                 All of the Above
-            </button>
-            <button
+              </button>
+              <button
                 type="button"
                 onClick={() => setSelectedGenres([])}
                 className={`px-4 py-2 rounded-full font-medium transition bg-gray-600 text-white shadow-md`}
-            >
+              >
                 Clear
-            </button>
+              </button>
             </div>
           </div>
         </div>
-
+        {/* Honeypot */}
+        <input
+          type="text"
+          name="lastname"
+          tabIndex={-1}
+          autoComplete="off"
+          style={{ display: 'none' }}
+        />
         <button
           type="submit"
           className="mt-6 bg-pink-600 hover:bg-pink-500 text-white rounded-2xl px-8 py-3 font-bold shadow-md transition"
@@ -137,6 +153,13 @@ export default function NewsletterSignupSection() {
           {loading ? "Signing Up..." : "Sign Me Up!"}
         </button>
         {message && <div className="mt-4 text-center text-pink-300">{message}</div>}
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-pink-400 underline mt-2"
+        >
+          Nevermind
+        </button>
       </form>
     </section>
   );
