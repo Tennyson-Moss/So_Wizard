@@ -74,7 +74,7 @@ export default function SignupForm({ onSuccess, onCancel }: SignupFormProps) {
       } else {
         setMessage(data.error || "Something went wrong.");
       }
-    } catch (err: any) {
+    } catch (err) {
       setMessage("Something went wrong.");
     }
     setLoading(false);
