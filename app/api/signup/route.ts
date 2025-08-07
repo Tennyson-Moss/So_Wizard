@@ -45,7 +45,10 @@ export async function POST(req: NextRequest) {
     await sendWelcomeEmail(email, username);
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
+  } catch (err) {
+  // TypeScript: err is 'unknown' by default in catch. Safely extract the message:
+  const message = err instanceof Error ? err.message : String(err);
+  return NextResponse.json({ error: message }, { status: 500 });
+}
+
 }

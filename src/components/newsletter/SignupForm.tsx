@@ -45,7 +45,9 @@ export default function SignupForm({ onSuccess, onCancel }: SignupFormProps) {
     setLoading(true);
     setMessage(null);
     // Honeypot check!
-    const honeypot = (e.target as any).lastname?.value || "";
+    const form = e.currentTarget as HTMLFormElement;
+    const honeypot = (form.elements.namedItem("lastname") as HTMLInputElement)?.value || "";
+
     if (honeypot) {
       setLoading(false);
       setMessage("Submission blocked. Are you a bot?");
