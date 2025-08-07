@@ -166,3 +166,4 @@ export default function SignupForm({ onSuccess, onCancel }: SignupFormProps) {
     </section>
   );
 }
+
